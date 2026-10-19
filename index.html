@@ -915,7 +915,7 @@ function testHtml(t,d,lock){
  <table class="ft">${rows}<tr><td class="lb"><b>Selisih</b><span class="sb2" data-stt="${t.id}"></span></td><td class="vc"><b data-sel="${t.id}"></b></td></tr></table>
  <div class="pan" data-pan="${t.id}" hidden>
   <div class="ph">Penjelasan selisih (pengungkapan dalam CaLK)</div>
-  <div class="wrap"><table class="ex"><tr><th></th><th>Akun / uraian pembentuk selisih</th><th>Penjelasan</th><th class="n">Nilai</th></tr>${ex}</table></div>
+  <div class="wrap"><table class="ex"><tr><th></th><th>Dropdown Transaksi pembentuk selisih</th><th>Penjelasan</th><th class="n">Nilai</th></tr>${ex}</table></div>
   <div class="sm"><span>Selisih: <b data-sl="${t.id}"></b></span><span>Total pembentuk: <b data-tot="${t.id}"></b></span><span>Sisa (selisih dikurangi total): <b data-sisa="${t.id}"></b></span><span class="sp"></span><button data-add="${t.id}" ${lock||nrow>=MAXEX?'disabled':''}>Tambah baris (${nrow}/${MAXEX})</button></div>
  </div></section>`}
 function anForm(d,lock){
