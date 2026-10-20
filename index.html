@@ -587,7 +587,7 @@ const sttA=e=>e.total===0?['Tidak ada mutasi','g']:e.ok?['Terjelaskan','g']:e.si
 function npEv(x){const a=akhir(x);if(x.np==null)return a===0?{k:'na',d:0}:{k:'blank',d:0};if(x.np===a)return{k:'ok',d:0};return{k:'mis',d:a-x.np,ok:!!(x.npn||'').trim()}}
 const accOk=x=>{const n=npEv(x);return evAs(x,'mt').ok&&evAs(x,'mk').ok&&(!neg(x)||(x.note||'').trim())&&(n.k==='ok'||n.k==='na'||(n.k==='mis'&&n.ok))};
 const MOD=[['as','Rincian aset'],['ps','Rincian persediaan'],['an','Prosedur analitik'],['tl','Telaah laporan keuangan']];
-const S={year:'2026',per:'tw3',view:'sat',mod:'as',rk:'st',sat:'001',flt:'',msg:'',onlySub:false};
+const S={year:'2026',per:'tw3',view:'sat',mod:'as',rk:'st',sat:'001',flt:'',q:'',msg:'',onlySub:false};
 const OPEN=new Set();
 const $=s=>document.querySelector(s);
 const fm=n=>Number(n).toLocaleString('id-ID');
@@ -599,7 +599,7 @@ const Yl=()=>(S.per==='unaud'||S.per==='aud')?'Tahun '+S.year:P[S.per].n+' '+S.y
 const Pl=()=>'Tahun '+(Number(S.year)-1);
 const lab=s=>s.replace(/\{Y\}/g,Yl()).replace(/\{P\}/g,Pl());
 const D2=v=>v[0]-v[1];
-const D3=v=>v[0]-(v[1]-v[2]);
+const D3=v=>v[0]-(Math.abs(v[1])-Math.abs(v[2]));
 const SM=v=>v[0]-v.slice(1).reduce((a,b)=>a+b,0);
 const F4=v=>v[0]-(v[1]-v[2]+v[3]);
 const F5=v=>v[0]-(v[1]+v[2]-v[3]);
@@ -622,7 +622,7 @@ const NODES=[
  T('h_b3','3)','Ekuitas Akhir (LPE) = Ekuitas (Neraca)',['Ekuitas Akhir (LPE {Y})','Ekuitas (Neraca {Y})'],D2),
  {k:'h2',t:'c. Analisis Horizontal antara LO, LRA, dan Neraca'},
  T('h_c1','1)','Pendapatan PNBP (LO) = Pendapatan PNBP (LRA) - Saldo Piutang PNBP awal tahun + Saldo Piutang PNBP akhir tahun +/- koreksi penyesuaian',['Pendapatan PNBP (LO {Y})','Pendapatan PNBP (LRA {Y})','Saldo Piutang PNBP {P}','Saldo Piutang PNBP {Y}'],F4),
- T('h_c2','2)','Beban persediaan (LO) = Belanja barang dan jasa persediaan (LRA) + Saldo Persediaan awal tahun - saldo persediaan akhir tahun +/- koreksi penyesuaian',['Beban persediaan (LO {Y})','Belanja barang dan jasa persediaan baik 5218 dan/atau 5231 ambil netto nya','Saldo Persediaan {P}','Saldo persediaan {Y}'],F5),
+ T('h_c2','2)','Beban persediaan (LO) = Belanja barang dan jasa persediaan (LRA) + Saldo Persediaan awal tahun - saldo persediaan akhir tahun +/- koreksi penyesuaian',['Beban persediaan (LO {Y})','Belanja barang dan jasa persediaan baik 5218 maupun 5231 ambil netto nya','Saldo Persediaan {P}','Saldo persediaan {Y}'],F5),
  T('h_c3','3)','Beban Penyusutan (LO) = Akumulasi penyusutan akhir tahun - akumulasi penyusutan awal tahun +/- koreksi penyesuaian',['Beban Penyusutan (LO {Y})','Akumulasi penyusutan {Y}','Akumulasi penyusutan {P}'],D3),
  {k:'grp',no:'4)',t:'Beban Penyisihan Piutang (LO) = Penyisihan piutang akhir tahun - Penyisihan Piutang awal tahun +/- koreksi penyesuaian'},
  PN('h_c4a','a)','Penyisihan Piutang Bukan Pajak'),
@@ -675,7 +675,9 @@ const blankItem=()=>({aw:0,mt:0,mk:0,note:'',np:null,npn:'',lt:[],lk:[]});
 const padItems=(a,n)=>{a=Array.isArray(a)?a:[];while(a.length<n)a.push(blankItem());a.forEach(x=>{x.aw=x.aw||0;x.mt=x.mt||0;x.mk=x.mk||0;x.lt=x.lt||[];x.lk=x.lk||[];x.note=x.note||'';x.np=x.np==null?null:x.np;x.npn=x.npn||''});return a};
 function blankE(){return{meta:{st:'Draft',sub:0,penyusun:{nama:'',nip:''},pj:{nama:'',nip:''},ketua:{nama:'',nip:''},anggota:{nama:'',nip:''}},review:null,an:{},as:padItems([],AST.length),ps:padItems([],PSN.length),tl:{j:{},u:{},n:{},lamp:'',tgl:''}}}
 function normE(e){const b=blankE().meta,m=e.meta||{};e.meta=Object.assign(b,m);e.meta.penyusun=Object.assign({nama:'',nip:''},m.penyusun);e.meta.pj=Object.assign({nama:'',nip:''},m.pj);e.meta.ketua=Object.assign({nama:'',nip:''},m.ketua);e.meta.anggota=Object.assign({nama:'',nip:''},m.anggota);
- e.an=e.an||{};e.as=padItems(e.as,AST.length);e.ps=padItems(e.ps,PSN.length);e.tl=normTl(e.tl);return e}
+ e.an=e.an||{};e.as=padItems(e.as,AST.length);e.ps=padItems(e.ps,PSN.length);e.tl=normTl(e.tl);
+ e.as.forEach((x,i)=>{if(kindOf(i)!=='akum')return;['aw','mt','mk'].forEach(w=>x[w]=Math.abs(x[w]||0));if(x.np!=null)x.np=Math.abs(x.np);['lt','lk'].forEach(L=>(x[L]||[]).forEach(y=>{if(y&&y.nilai!=null)y.nilai=Math.abs(y.nilai)}))});
+ if(e.an.h_c3&&Array.isArray(e.an.h_c3.v))[1,2].forEach(r=>{if(e.an.h_c3.v[r]!=null)e.an.h_c3.v[r]=Math.abs(e.an.h_c3.v[r])});return e}
 function eff(d){const m=d.meta;if(m.st!=='Submit')return'Draft';const r=d.review;return r&&r.st&&r.forSub===m.sub?r.st:'Submit'}
 
 /* ===== Telaah laporan keuangan (format Excel Kertas Kerja Telaah) ===== */
@@ -736,7 +738,9 @@ function silang(d){const L=[],R=fm,av=(id,r)=>{const a=d.an[id];return a&&a.v[r]
  const bm={};Object.keys(BMX).forEach(k=>{bm[BMX[k]]=lnSum(d,'as','mt',p=>p===k)});
  Object.keys(bm).forEach(id=>{const t=TESTS.find(x=>x.id===id),b=av(id,0);if(b==null||bm[id]===b)return;
   L.push({mod:'an',tg:`[data-blk="${id}"]`,nm:'Belanja modal '+t.title.replace('Aset ',''),why:`Pembelian belanja modal pada Rincian aset ${R(bm[id])} berbeda dari realisasi belanja modal LRA ${R(b)} (selisih ${R(bm[id]-b)}). Selisih lazim berasal dari belanja yang belum dicatat sebagai aset, belanja yang tidak dikapitalisasi, atau pengembalian belanja.`})});
- cmp('an','[data-blk="h_c3"]','Beban penyusutan',lnSum(d,'as','mt',(p,i)=>isAk(i)&&p==='Penyusutan periode berjalan'),av('h_c3',0),'Penyusutan periode berjalan pada Rincian aset','Beban penyusutan LO');
+ {const pp=lnSum(d,'as','mt',(p,i)=>isAk(i)&&p==='Penyusutan periode berjalan'),bl=av('h_c3',0);
+  if(bl!=null&&pp!==bl){const dk=d.as.reduce((q,x,i)=>q+(isAk(i)?x.mt-x.mk:0),0),lain=d.as.reduce((q,x,i)=>q+(isAk(i)?x.mt:0),0)-pp,kur=d.as.reduce((q,x,i)=>q+(isAk(i)?x.mk:0),0);
+   L.push({mod:'an',tg:'[data-blk="h_c3"]',nm:'Beban penyusutan',why:`Penyusutan periode berjalan pada Rincian aset ${R(pp)} berbeda dari Beban penyusutan LO ${R(bl)} (selisih ${R(pp-bl)}). Sebagai pembanding, akumulasi bertambah ${R(pp+lain)} dari seluruh mutasi tambah (penyusutan ${R(pp)}, mutasi lain ${R(lain)}) dan berkurang ${R(kur)} dari mutasi kurang, sehingga perubahan bersih ${R(dk)}. Selisih lazim berasal dari mutasi akumulasi selain penyusutan (transfer, penghapusan, koreksi); jelaskan di CaLK.`})}}
  const pa=d.ps.reduce((q,x)=>q+x.aw,0),pk=d.ps.reduce((q,x)=>q+(d.ps.every(y=>y.np!=null)?x.np:akhir(x)),0);
  cmp('ps','[data-ac="ps0"]','Saldo awal persediaan',pa,av('h_c2',2),'Saldo awal pada Rincian persediaan','Saldo persediaan '+Pl());
  cmp('ps','[data-ac="ps0"]','Saldo akhir persediaan',pk,av('h_c2',3),'Saldo akhir pada Rincian persediaan','Saldo persediaan '+Yl());
@@ -915,7 +919,7 @@ function testHtml(t,d,lock){
  <table class="ft">${rows}<tr><td class="lb"><b>Selisih</b><span class="sb2" data-stt="${t.id}"></span></td><td class="vc"><b data-sel="${t.id}"></b></td></tr></table>
  <div class="pan" data-pan="${t.id}" hidden>
   <div class="ph">Penjelasan selisih (pengungkapan dalam CaLK)</div>
-  <div class="wrap"><table class="ex"><tr><th></th><th>Transaksi pembentuk selisih</th><th>Penjelasan</th><th class="n">Nilai</th></tr>${ex}</table></div>
+  <div class="wrap"><table class="ex"><tr><th></th><th>Akun / uraian pembentuk selisih</th><th>Penjelasan</th><th class="n">Nilai</th></tr>${ex}</table></div>
   <div class="sm"><span>Selisih: <b data-sl="${t.id}"></b></span><span>Total pembentuk: <b data-tot="${t.id}"></b></span><span>Sisa (selisih dikurangi total): <b data-sisa="${t.id}"></b></span><span class="sp"></span><button data-add="${t.id}" ${lock||nrow>=MAXEX?'disabled':''}>Tambah baris (${nrow}/${MAXEX})</button></div>
  </div></section>`}
 function anForm(d,lock){
@@ -945,7 +949,7 @@ function asPanel(s,i,k,x,dis){
   rows+=`<tr><td>${c})</td><td><select class="ti" ${at} data-f="p" aria-label="Pembentuk baris ${c}" ${dis}><option value="">${s==='as'?'Pilih belanja atau akun':'Pilih pembentuk'}</option>${(y.p&&o.indexOf(y.p)<0?[y.p].concat(o):o).map(v=>`<option ${y.p===v?'selected':''}>${esc(v)}</option>`).join('')}</select></td><td><input class="ti" ${at} data-f="ket" value="${esc(y.ket)}" placeholder="Keterangan (wajib bila Lainnya)" aria-label="Keterangan baris ${c}" ${dis}></td><td><input class="vi" inputmode="numeric" ${at} data-f="nilai" value="${y.nilai==null?'':fm(y.nilai)}" aria-label="Nilai baris ${c}" ${dis}></td></tr>`}
  return`<div class="pan" data-q="${id}-${k}-pan" hidden><div class="ph">Pembentuk mutasi ${nm}${s==='as'?' (belanja atau akun)':''}</div><div class="wrap"><table class="ex"><tr><th></th><th>${s==='as'?'Belanja atau akun pembentuk':'Pembentuk'}</th><th>Keterangan</th><th class="n">Nilai</th></tr>${rows}</table></div><div class="sm"><span>Mutasi ${nm}: <b data-q="${id}-${k}-sl"></b></span><span>Total pembentuk: <b data-q="${id}-${k}-tot"></b></span><span>Sisa: <b data-q="${id}-${k}-sisa"></b></span><span class="sb2" data-q="${id}-${k}-stt"></span><span class="sp"></span><button data-adda="${s}:${i}:${k}" ${dis||nrow>=MAXL?'disabled':''}>Tambah baris (${nrow}/${MAXL})</button></div></div>`}
 function setForm(s,d,lock){const dis=lock?'disabled':'',names=SETS[s].names;
- let h=s==='as'?`<div class="fh"><h2>Rincian aset ${P[S.per].n} ${S.year}</h2><p>Nilai dalam Rupiah. Saldo akhir = saldo awal + mutasi tambah - mutasi kurang. Untuk akun akumulasi penyusutan, isi sebagai angka positif.</p><p>Setiap mutasi tambah dan mutasi kurang harus dijelaskan: pilih belanja atau akun pembentuknya dari daftar, lalu isi nilainya. Jumlah nilai pembentuk harus sama dengan mutasi, sehingga sisa nol.</p><p id="sum-as"></p></div>`
+ let h=s==='as'?`<div class="fh"><h2>Rincian aset ${P[S.per].n} ${S.year}</h2><p>Nilai dalam Rupiah. Saldo akhir = saldo awal + mutasi tambah - mutasi kurang. Untuk akun akumulasi penyusutan, isi sebagai angka positif. Bila disalin dari Neraca (negatif atau dalam kurung), tanda minus otomatis diabaikan.</p><p>Setiap mutasi tambah dan mutasi kurang harus dijelaskan: pilih belanja atau akun pembentuknya dari daftar, lalu isi nilainya. Jumlah nilai pembentuk harus sama dengan mutasi, sehingga sisa nol.</p><p id="sum-as"></p></div>`
  :`<div class="fh"><h2>Rincian persediaan ${P[S.per].n} ${S.year}</h2><p>Nilai dalam Rupiah. Persediaan dibentuk dari lima jenis. Isi saldo awal, mutasi tambah, dan mutasi kurang tiap jenis; total persediaan dihitung otomatis.</p><p>Setiap mutasi harus dijelaskan: pilih pembentuknya dari daftar, lalu isi nilainya. Jumlah nilai pembentuk harus sama dengan mutasi, sehingga sisa nol.</p><p id="sum-ps"></p></div><section class="tb"><h5 class="th">Total Persediaan <span class="sb2">jumlah kelima jenis</span></h5><table class="ft">${[['aw','Saldo awal'],['mt','Mutasi tambah'],['mk','Mutasi kurang'],['ak','Saldo akhir']].map(([k,l])=>`<tr><td class="lb">${k==='ak'?'<b>'+l+'</b>':l}</td><td class="vc"><b data-q="ps-tot-${k}"></b></td></tr>`).join('')}</table></section>`;
  d[s].forEach((x,i)=>{const id=s+i,vi=(w,l)=>`<tr><td class="lb">${l}</td><td class="vc"><input class="vi" inputmode="numeric" data-s="${s}" data-a="${i}" data-w="${w}" value="${x[w]?fm(x[w]):''}" aria-label="${l} ${esc(names[i])}" ${dis}></td></tr>`;
   h+=`<section class="tb" data-ac="${id}"><h5 class="th">${i+1}. ${esc(names[i])}<span class="sb2" data-q="${id}-st"></span></h5><table class="ft">${vi('aw','Saldo awal')}${vi('mt','Mutasi tambah')}${vi('mk','Mutasi kurang')}<tr><td class="lb"><b>Saldo akhir</b></td><td class="vc"><b data-q="${id}-ak"></b></td></tr><tr><td class="lb">Saldo menurut Neraca Percobaan Akrual (SAKTI)</td><td class="vc"><input class="vi" inputmode="numeric" data-s="${s}" data-a="${i}" data-w="np" value="${x.np==null?'':fm(x.np)}" aria-label="Saldo Neraca Percobaan Akrual ${esc(names[i])}" ${dis}></td></tr><tr><td class="lb">Selisih dengan saldo akhir <span class="sb2" data-q="${id}-nps"></span></td><td class="vc"><b data-q="${id}-npd"></b></td></tr></table><div class="pan" data-q="${id}-npp" hidden><div class="ph">Saldo akhir berbeda dari Neraca Percobaan Akrual, jelaskan penyebabnya</div><input class="ti" data-s="${s}" data-a="${i}" data-w="npn" value="${esc(x.npn)}" placeholder="Penyebab selisih dengan Neraca Percobaan" aria-label="Penyebab selisih NP ${esc(names[i])}" ${dis}></div>${asPanel(s,i,'mt',x,dis)}${asPanel(s,i,'mk',x,dis)}<div class="pan" data-q="${id}-neg" hidden><div class="ph">Saldo akhir negatif, jelaskan penyebabnya</div><input class="ti" data-s="${s}" data-a="${i}" data-w="note" value="${esc(x.note)}" placeholder="Penjelasan saldo akhir negatif" aria-label="Penjelasan saldo akhir negatif ${esc(names[i])}" ${dis}></div></section>`});
@@ -993,10 +997,10 @@ function viewSat(){
 /* ===== Tampilan: rekap Eselon I ===== */
 function viewStatus(){const rows=SAT.map(s=>({s,d:get(s.c)})).map(r=>({...r,f:flags(r.d),st:eff(r.d)})).sort((a,b)=>b.f.m-a.f.m||b.f.t-a.f.t);
  const sent=rows.filter(r=>r.st==='Submit'||r.st==='Disetujui').length,ok=rows.filter(r=>r.st==='Disetujui').length;
- const view=rows.filter(r=>!S.flt||r.st===S.flt),sm=k=>fm(Math.round(rows.reduce((a,r)=>a+r.f[k],0)/1e6)),mm=rows.reduce((a,r)=>a+r.f.m,0),adm=canAdmin();
+ const qn=(S.q||'').trim().toLowerCase(),view=rows.filter(r=>(!S.flt||r.st===S.flt)&&(!qn||(r.s.c+' '+r.s.n).toLowerCase().includes(qn))),sm=k=>fm(Math.round(rows.reduce((a,r)=>a+r.f[k],0)/1e6)),mm=rows.reduce((a,r)=>a+r.f.m,0),adm=canAdmin();
  const opt=(r)=>['Submit','Perlu Perbaikan','Disetujui'].map(x=>`<option value="${x}" ${r.st===x?'selected':''}>${x==='Submit'?'Menunggu reviu':x}</option>`).join('');
  return`<div class="kpis"><div class="k"><b>${sent}/${SAT.length}</b><span>Satker sudah mengirim</span></div><div class="k"><b>${ok}</b><span>Disetujui reviewer</span></div><div class="k"><b>${mm}</b><span>Item belum dijelaskan</span></div><div class="k"><b>${sm('mt')}</b><span>Mutasi tambah aset (Rp juta)</span></div><div class="k"><b>${sm('mk')}</b><span>Mutasi kurang aset (Rp juta)</span></div><div class="k"><b>${sm('pt')}</b><span>Mutasi tambah persediaan (Rp juta)</span></div><div class="k"><b>${sm('pk')}</b><span>Mutasi kurang persediaan (Rp juta)</span></div></div>
- <div class="row"><label>Filter status <select id="flt"><option value="">Semua</option>${['Draft','Submit','Perlu Perbaikan','Disetujui'].map(x=>`<option ${S.flt===x?'selected':''}>${x}</option>`).join('')}</select></label><small>Diurutkan dari item belum dijelaskan terbanyak.${adm?'':' Hanya Editor yang dapat mengubah status reviu.'}</small></div>
+ <div class="row"><label>Cari satker <input id="qs" type="search" placeholder="Nama atau kode satker" value="${esc(S.q||'')}" autocomplete="off" style="min-width:230px"></label><label>Filter status <select id="flt"><option value="">Semua</option>${['Draft','Submit','Perlu Perbaikan','Disetujui'].map(x=>`<option ${S.flt===x?'selected':''}>${x}</option>`).join('')}</select></label><small>Diurutkan dari item belum dijelaskan terbanyak.${adm?'':' Hanya Editor yang dapat mengubah status reviu.'}</small></div>
  <div class="wrap"><table><tr><th>Satker</th><th>Status</th><th class="n">Item perhatian</th><th class="n">Belum dijelaskan</th><th class="n">Mutasi tambah aset (Rp juta)</th><th class="n">Mutasi kurang aset (Rp juta)</th><th class="n">Mutasi tambah persediaan (Rp juta)</th><th class="n">Mutasi kurang persediaan (Rp juta)</th>${MODE==='gas'?'<th>Hasil reviu</th>':''}<th>Reviu</th><th></th></tr>`+
  view.map(r=>`<tr><td>${esc(r.s.c)} - ${esc(r.s.n)}</td><td>${bd(r.st)}</td><td class="n">${r.f.t?`<button class="lk" data-iss="${esc(r.s.c)}" title="Lihat rincian">${r.f.t}</button>`:0}</td><td class="n ${r.f.m?'e':''}">${r.f.m?`<button class="lk e" data-iss="${esc(r.s.c)}" title="Lihat rincian">${r.f.m}</button>`:0}</td><td class="n">${fm(Math.round(r.f.mt/1e6))}</td><td class="n">${fm(Math.round(r.f.mk/1e6))}</td><td class="n">${fm(Math.round(r.f.pt/1e6))}</td><td class="n">${fm(Math.round(r.f.pk/1e6))}</td>${MODE==='gas'?hasilSel(r.s.c):''}<td>${r.st==='Draft'?'<small>Belum dikirim</small>':adm?`<select data-st="${esc(r.s.c)}" aria-label="Status reviu ${esc(r.s.c)}">${opt(r)}</select>`:'<small>Hanya lihat</small>'}</td><td><button data-open="${esc(r.s.c)}">Buka</button></td></tr>`).join('')+'</table></div>'}
 function detAn(r,list){const t=r.t,id='an-'+t.id,L='abcdefghij';
@@ -1208,7 +1212,8 @@ function parseSat(txt){const seen=new Set(),out=[];
  txt.split(/\r?\n/).forEach(l=>{l=l.trim();if(!l)return;const m=l.match(/^([^\s;,\t]+)[\s;,\t]+[-–]?\s*(.*)$/)||[0,l,''];
   const c=m[1].replace(/[^A-Za-z0-9_.:@+~-]/g,'');if(!c||seen.has(c))return;seen.add(c);out.push({c,n:(m[2]||'').trim()||'Satker '+c})});
  return out.slice(0,100)}
-$('#app').addEventListener('input',e=>{const el=e.target;if(el.disabled)return;
+$('#app').addEventListener('input',e=>{const el=e.target;if(el.id==='qs'){S.q=el.value;const q=el.value.trim().toLowerCase();let n=0;const tb=[...document.querySelectorAll('#app .wrap table')].find(t=>t.rows[0]&&t.rows[0].cells[0].textContent==='Satker');if(tb)[...tb.rows].slice(1).forEach(r=>{const t=(r.cells[0]||{}).textContent||'',h=!q||t.toLowerCase().includes(q);r.style.display=h?'':'none';if(h)n++});return}
+ if(el.disabled)return;
  if(el.dataset.pn){const [i,f]=el.dataset.pn.split('.');if(CFG.penelaah[+i])CFG.penelaah[+i][f]=el.value;return}
  if(el.dataset.hs){const [k,a,b]=el.dataset.hs.split('.'),c=S.sat,bag=hs(c)[k];
   if(a==='pen'){const p=(CFG.penelaah||[]).find(x=>x.nama===el.value);bag.nama=el.value;bag.nip=p?p.nip:(el.value?bag.nip:'');const sp=document.querySelector(`[data-nipv="${k}"]`);if(sp)sp.textContent='NIP '+(bag.nip||'-')}
@@ -1216,12 +1221,12 @@ $('#app').addEventListener('input',e=>{const el=e.target;if(el.disabled)return;
   else{const i=+a;while(bag.items.length<=i)bag.items.push({k:'Umum',temuan:'',saran:''});bag.items[i][b]=el.value}
   HDIRTY.add(c);return}
  if(el.dataset.t){const t=TESTS.find(x=>x.id===el.dataset.t);if(!t)return;const a=A(touch(S.sat),t);
-  if(el.dataset.r!==undefined)a.v[+el.dataset.r]=pn(el.value);
+  if(el.dataset.r!==undefined){let n=pn(el.value);if(t.id==='h_c3'&&+el.dataset.r>0&&n!=null)n=Math.abs(n);a.v[+el.dataset.r]=n}
   else{const i=+el.dataset.i,f=el.dataset.f;while(a.ex.length<=i)a.ex.push(blank());a.ex[i][f]=f==='nilai'?pn(el.value):el.value}
   save();refreshTest(t);refreshSummary();return}
  if(el.dataset.a!==undefined){const z=el.dataset.s,i=+el.dataset.a,x=touch(S.sat)[z][i];
-  if(el.dataset.w){const w=el.dataset.w;x[w]=(w==='note'||w==='npn')?el.value:w==='np'?pn(el.value):(pn(el.value)||0)}
-  else{const L=el.dataset.k==='mt'?'lt':'lk',j=+el.dataset.i,f=el.dataset.f;while(x[L].length<=j)x[L].push(blankL());x[L][j][f]=f==='nilai'?pn(el.value):el.value}
+  if(el.dataset.w){const w=el.dataset.w,ak=z==='as'&&kindOf(i)==='akum',ab=n=>ak&&n!=null?Math.abs(n):n;x[w]=(w==='note'||w==='npn')?el.value:w==='np'?ab(pn(el.value)):ab(pn(el.value)||0)}
+  else{const L=el.dataset.k==='mt'?'lt':'lk',j=+el.dataset.i,f=el.dataset.f;while(x[L].length<=j)x[L].push(blankL());x[L][j][f]=f==='nilai'?(z==='as'&&kindOf(i)==='akum'&&pn(el.value)!=null?Math.abs(pn(el.value)):pn(el.value)):el.value}
   save();refreshAs(z,i);refreshSum(z);return}
  if(el.dataset.tu){TL(touch(S.sat)).u[el.dataset.tu]=el.value;save();tlRefresh();return}
  if(el.dataset.tn){TL(touch(S.sat)).n[el.dataset.tn]=pn(el.value);save();tlRefresh();return}
@@ -1232,9 +1237,9 @@ $('#app').addEventListener('change',async e=>{const el=e.target;
  if(el.type==='file'&&el.dataset.up){const f=el.files&&el.files[0];el.value='';await gasUpload(f,el.dataset.up);return}
  if(el.dataset.tl){TL(touch(S.sat)).j[el.dataset.tl]=el.value;save();tlRefresh();return}
  else if(el.dataset.tn){const n=pn(el.value);el.value=n==null?'':fm(n)}
- else if(el.dataset.t&&(el.dataset.r!==undefined||el.dataset.f==='nilai')){const n=pn(el.value);el.value=n==null?'':fm(n)}
- else if(el.dataset.a!==undefined&&el.dataset.w==='np'){const n=pn(el.value);el.value=n==null?'':fm(n)}
- else if(el.dataset.a!==undefined&&(['aw','mt','mk'].includes(el.dataset.w)||el.dataset.f==='nilai')){const n=pn(el.value);el.value=n?fm(n):''}
+ else if(el.dataset.t&&(el.dataset.r!==undefined||el.dataset.f==='nilai')){let n=pn(el.value);if(el.dataset.t==='h_c3'&&+el.dataset.r>0&&n!=null)n=Math.abs(n);el.value=n==null?'':fm(n)}
+ else if(el.dataset.a!==undefined&&el.dataset.w==='np'){let n=pn(el.value);if(n!=null&&el.dataset.s==='as'&&kindOf(+el.dataset.a)==='akum')n=Math.abs(n);el.value=n==null?'':fm(n)}
+ else if(el.dataset.a!==undefined&&(['aw','mt','mk'].includes(el.dataset.w)||el.dataset.f==='nilai')){let n=pn(el.value);if(n&&el.dataset.s==='as'&&kindOf(+el.dataset.a)==='akum')n=Math.abs(n);el.value=n?fm(n):''}
  else if(el.dataset.cfg&&live()){/* disimpan lewat tombol Simpan pengaturan */}
  else if(el.id==='sat'){S.sat=el.value;S.msg='';render()}
  else if(el.id==='flt'){S.flt=el.value;render()}
@@ -1421,7 +1426,7 @@ ${gc('info','Isian <b>tersimpan otomatis</b> sekitar satu detik setelah Anda ber
 ${gc('warn','Salah password <b>5 kali berturut-turut</b> mengunci akun selama 15 menit. Bila lupa password, minta Eselon I mengembalikannya ke password awal, lalu ganti lagi.')}
 ${gc('tip','Sesi login berlaku 8 jam. Bila sesi habis, Anda diminta masuk lagi dan isian yang sudah tersimpan tetap ada.')}`},
 {t:'Rincian aset',m:10,h:()=>`<p>Bagian ini berisi <b>17 akun aset</b> (aset tetap, KDP, akumulasi penyusutan, ATB, dan aset tidak digunakan).</p>
-${gol(['Buka tab <b>Rincian aset</b>.','Untuk tiap akun isi <b>Saldo awal</b>, <b>Mutasi tambah</b>, dan <b>Mutasi kurang</b> dalam rupiah penuh. Semua angka diisi positif, termasuk akumulasi penyusutan. Saldo akhir dihitung otomatis.','Isi juga <b>Saldo menurut Neraca Percobaan Akrual (SAKTI)</b> untuk akun itu. Nilainya harus <b>sama dengan saldo akhir</b>. Bila berbeda, kolom penyebab muncul dan wajib diisi. Akun yang tidak punya saldo boleh dikosongkan.','Bila ada mutasi, panel pembentuk terbuka. Pilih <b>jenis transaksi</b> dari daftar (istilahnya sama dengan SAKTI, mis. Pembelian, Hibah Masuk, Transfer Masuk, Penghapusan), isi nilainya, dan tambahkan baris bila perlu (maksimal 20).','Jumlah semua nilai pembentuk harus sama dengan mutasinya, sehingga <b>sisa = 0</b>.','Bila memilih <b>Lainnya</b>, keterangan wajib diisi.'])}
+${gol(['Buka tab <b>Rincian aset</b>.','Untuk tiap akun isi <b>Saldo awal</b>, <b>Mutasi tambah</b>, dan <b>Mutasi kurang</b> dalam rupiah penuh. Semua angka diisi positif, termasuk akumulasi penyusutan (angka negatif atau dalam kurung dari Neraca otomatis dibaca positif). Saldo akhir dihitung otomatis.','Isi juga <b>Saldo menurut Neraca Percobaan Akrual (SAKTI)</b> untuk akun itu. Nilainya harus <b>sama dengan saldo akhir</b>. Bila berbeda, kolom penyebab muncul dan wajib diisi. Akun yang tidak punya saldo boleh dikosongkan.','Bila ada mutasi, panel pembentuk terbuka. Pilih <b>jenis transaksi</b> dari daftar (istilahnya sama dengan SAKTI, mis. Pembelian, Hibah Masuk, Transfer Masuk, Penghapusan), isi nilainya, dan tambahkan baris bila perlu (maksimal 20).','Jumlah semua nilai pembentuk harus sama dengan mutasinya, sehingga <b>sisa = 0</b>.','Bila memilih <b>Lainnya</b>, keterangan wajib diisi.'])}
 {{sim2}}
 ${gc('warn','Saldo akhir yang <b>negatif</b> ditandai merah. Jelaskan penyebabnya pada kolom catatan akun itu, atau perbaiki angka saldo awal dan mutasinya.')}
 ${gc('tip','Baris yang nilainya kosong atau 0 dianggap tidak ada. Anda tidak perlu menghapusnya.')}`},
@@ -1459,7 +1464,7 @@ ${gul(['Rekap diperbarui otomatis dari isian satker (sekitar tiap 60 detik) tanp
 {t:'Masuk dan pengaturan awal',m:6,h:()=>`${gol(['Masuk dengan kode <b>ESELON1</b> dan password awal yang ditetapkan saat pemasangan, lalu ganti password.','Buka tab <b>Rekap Eselon I</b>, lalu buka panel <b>Pengaturan Eselon I</b>.','Isi <b>Penelaah UAPPA dan UAPPB</b>. Nama dan NIP ini tercetak sebagai penelaah bila belum ada penelaah yang dipilih di hasil reviu.','Periksa <b>Penanggung Jawab dan Mengetahui</b> (nama dan NIP sudah terisi dan dapat diubah).','Isi <b>Tim penelaah</b>: bidang (LK atau BMN), nomor tim, nama, dan NIP, sampai 30 orang.','Klik <b>Simpan pengaturan</b>.'])}
 ${gc('info','Pengaturan ini berlaku untuk semua satker dan semua PDF. Lakukan sekali, dan ubah hanya bila pejabat berganti.')}`},
 {t:'Memantau status satker',m:5,h:()=>`<p>Tab <b>Status satker</b> menampilkan ringkasan dan tabel semua satker, diurutkan dari yang paling banyak belum dijelaskan.</p>
-${gul(['Kotak ringkasan: jumlah satker yang sudah mengirim, jumlah disetujui, dan total mutasi.','<b>Filter status</b> menyaring Draft, Submit, Perlu Perbaikan, atau Disetujui.','Klik angka pada kolom <b>Item perhatian</b> atau <b>Belum dijelaskan</b> untuk melihat alasannya di satker itu.','Kolom <b>Hasil reviu</b> menunjukkan apakah catatan LK dan BMN masih draf atau sudah final.','Centang <b>Hanya satker yang sudah mengirim</b> agar rekap tidak tercampur data satker yang belum selesai.'])}
+${gul(['Kotak ringkasan: jumlah satker yang sudah mengirim, jumlah disetujui, dan total mutasi.','<b>Cari satker</b> menyaring daftar menurut nama atau kode satker, dan <b>Filter status</b> menyaring Draft, Submit, Perlu Perbaikan, atau Disetujui.','Klik angka pada kolom <b>Item perhatian</b> atau <b>Belum dijelaskan</b> untuk melihat alasannya di satker itu.','Kolom <b>Hasil reviu</b> menunjukkan apakah catatan LK dan BMN masih draf atau sudah final.','Centang <b>Hanya satker yang sudah mengirim</b> agar rekap tidak tercampur data satker yang belum selesai.'])}
 ${gc('tip','Mulailah dari satker berstatus Menunggu reviu dengan angka belum dijelaskan nol. Itu yang paling siap ditelaah.')}`},
 {t:'Membaca rekap per bagian',m:8,h:()=>`<table class="gt"><tr><th>Tab rekap</th><th>Gunanya</th></tr><tr><td>Rincian aset dan Rincian persediaan</td><td>Total saldo dan mutasi per akun, dengan pembentuk mutasi yang digabung dari semua satker. Klik akun untuk melihat rinciannya per satker.</td></tr><tr><td>Prosedur analitik</td><td>Per pengujian: berapa satker berselisih, selisih konsolidasi, dan penjelasan tiap satker</td></tr><tr><td>Telaah laporan keuangan</td><td>Butir yang jawabannya berbeda dari yang seharusnya, satker mana, dan uraiannya</td></tr><tr><td>Pengecekan silang</td><td>Total transfer keluar dan masuk antar satker, dan peringatan angka antar bagian per satker</td></tr></table>
 ${gc('info','Selisih transfer keluar dan masuk wajar bila pasangannya di luar 52 satker. Selisih besar tetap perlu ditelusuri, karena transfer antar satker seharusnya berpasangan.')}`},
@@ -1563,7 +1568,7 @@ $('#app').addEventListener('toggle',e=>{if(!S.gd)return;const d=e.target;if(d.da
 $('#gd').onclick=()=>{S.gd=!S.gd;if(S.gd){GST.role=null;GST.step=0}render();window.scrollTo(0,0)};
 
 
-const VERSI='2026.10.18-1';$('#ft').textContent='Desk LK Ditjen P2 - versi '+VERSI;
+const VERSI='2026.10.20-2';$('#ft').textContent='Desk LK Ditjen P2 - versi '+VERSI;
 /* ===== Tombol mata pada kolom password ===== */
 const EYE_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19c-7 0-11-7-11-7a19.8 19.8 0 0 1 5.06-5.94M9.9 4.24A10.7 10.7 0 0 1 12 4c7 0 11 7 11 7a19.9 19.9 0 0 1-3.17 4.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
